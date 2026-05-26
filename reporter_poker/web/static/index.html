@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0A0C0F">
+  <title>Reporter Tourette Poker Engine</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <div class="hero-banner" aria-hidden="true">
+    <img src="/static/img/banner.jpg" alt="" onerror="this.style.display='none'">
+  </div>
+
+  <header class="topbar">
+    <div class="wordmark">
+      <svg class="logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="spadeGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#5CE1E6"/>
+            <stop offset="60%"  stop-color="#48CAE4"/>
+            <stop offset="100%" stop-color="#2A8FA8"/>
+          </linearGradient>
+          <radialGradient id="spadeGlow" cx="50%" cy="40%" r="60%">
+            <stop offset="0%"  stop-color="#5CE1E6" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#5CE1E6" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="32" cy="32" r="30" fill="url(#spadeGlow)"/>
+        <path
+          d="M32 8 C32 22, 52 28, 52 42 C52 51, 44 55, 38 53 L38 56 L44 60 L20 60 L26 56 L26 53 C20 55, 12 51, 12 42 C12 28, 32 22, 32 8 Z"
+          fill="url(#spadeGrad)"
+          stroke="#0A0C0F"
+          stroke-width="1"
+          stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <h1>Reporter Tourette Poker Engine</h1>
+        <p class="subtitle">Analisador de mãos · Texas Hold'em</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <div class="col col-input">
+
+      <section class="panel ocr">
+        <div class="panel-header">
+          <h2 class="panel-title">Ler de imagem (OCR)</h2>
+          <span class="ocr-badge" title="A leitura usa um modelo de visão local via Ollama">beta</span>
+        </div>
+
+        <label for="ocr-file" id="ocr-drop" class="ocr-drop">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none"
+               stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <strong>Solte um print aqui</strong>
+          <span>ou clique para escolher · cole com <kbd>Ctrl</kbd>+<kbd>V</kbd></span>
+          <input id="ocr-file" type="file" accept="image/*" hidden>
+        </label>
+
+        <div id="ocr-status" class="ocr-status" hidden></div>
+      </section>
+
+      <section class="panel slots">
+        <div class="panel-header">
+          <h2 class="panel-title">Sua mão e o board</h2>
+          <button id="new-hand" type="button" class="btn-secondary" title="Limpar cartas e manter cenário">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
+                 stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+              <path d="M3 21v-5h5"/>
+            </svg>
+            Nova mão
+          </button>
+        </div>
+
+        <div class="slot-row">
+          <span class="row-label">Sua mão</span>
+          <div class="card-slot" data-slot="hole-0"></div>
+          <div class="card-slot" data-slot="hole-1"></div>
+        </div>
+
+        <div class="slot-row">
+          <span class="row-label">Flop</span>
+          <div class="card-slot" data-slot="flop-0"></div>
+          <div class="card-slot" data-slot="flop-1"></div>
+          <div class="card-slot" data-slot="flop-2"></div>
+        </div>
+
+        <div class="slot-row">
+          <span class="row-label">Turn</span>
+          <div class="card-slot" data-slot="turn-0"></div>
+        </div>
+
+        <div class="slot-row">
+          <span class="row-label">River</span>
+          <div class="card-slot" data-slot="river-0"></div>
+        </div>
+
+        <div class="slots-footer">
+          <button id="clear" type="button" class="link-btn" title="Limpa cartas e restaura o cenário padrão">Limpar tudo</button>
+        </div>
+      </section>
+
+      <section class="panel picker">
+        <h2 class="panel-title">Selecione uma carta</h2>
+        <div id="card-grid" class="card-grid"></div>
+        <p class="hint">
+          Clique em uma carta da grade para preenchê-la na próxima posição vazia.
+          Clique em uma carta já posicionada para removê-la.
+        </p>
+      </section>
+
+      <section class="panel controls">
+        <h2 class="panel-title">Cenário</h2>
+
+        <div class="fields">
+          <div class="field">
+            <label for="opponents">Oponentes</label>
+            <input id="opponents" type="number" min="1" max="8" value="1">
+          </div>
+          <div class="field">
+            <label for="pot">Pote</label>
+            <input id="pot" type="number" min="0" step="1" value="100">
+          </div>
+          <div class="field">
+            <label for="to_call">Pagar (call)</label>
+            <input id="to_call" type="number" min="0" step="1" value="50">
+          </div>
+          <div class="field">
+            <label for="iterations">Simulações</label>
+            <input id="iterations" type="number" min="500" max="200000" step="1000" value="25000">
+          </div>
+        </div>
+
+        <button id="analyze" type="button" class="btn-primary">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="label-default">Analisar mão</span>
+          <span class="label-loading">Simulando…</span>
+        </button>
+      </section>
+
+    </div>
+
+    <div class="col col-results">
+
+      <div id="error" class="error" hidden></div>
+
+      <section class="panel empty-state" id="empty-state">
+        <h2>Pronto para analisar</h2>
+        <p>
+          Selecione as duas cartas da sua mão, adicione o flop / turn / river conforme
+          a rua atual e ajuste o cenário para receber equidade, outs, pot odds e a ação
+          sugerida.
+        </p>
+
+        <ol class="steps">
+          <li><span class="step-num">1</span>Escolha 2 cartas para a sua mão</li>
+          <li><span class="step-num">2</span>Adicione o board (opcional)</li>
+          <li><span class="step-num">3</span>Informe oponentes, pote e valor a pagar</li>
+          <li><span class="step-num">4</span>Clique em <strong>Analisar</strong></li>
+        </ol>
+
+        <ul class="legend">
+          <li><span class="dot fold"></span>Desistir</li>
+          <li><span class="dot call"></span>Pagar</li>
+          <li><span class="dot raise"></span>Aumentar</li>
+          <li><span class="dot check"></span>Mesa / Check</li>
+        </ul>
+      </section>
+
+      <section class="panel results" id="results" hidden>
+        <h2 class="panel-title">Resultado</h2>
+
+        <div class="result-row">
+          <span class="label">Mão atual</span>
+          <span class="value"><span id="r-hand" class="hand-pill"></span></span>
+        </div>
+
+        <div class="equity-block">
+          <div class="label">Chance de vitória</div>
+          <div class="equity-bar">
+            <div id="r-equity-bar" class="equity-fill"></div>
+            <span id="r-equity-text" class="equity-percent">0.00%</span>
+          </div>
+          <div class="sub">
+            <span>Empate <strong id="r-tie">0.00</strong>%</span>
+            <span>Derrota <strong id="r-loss">0.00</strong>%</span>
+            <span id="r-iters" class="muted"></span>
+          </div>
+        </div>
+
+        <div class="result-row">
+          <span class="label">Outs</span>
+          <span class="value" id="r-outs-wrap">
+            <strong id="r-outs-count" class="num">—</strong>
+            <span id="r-outs-strip" class="outs-strip"></span>
+          </span>
+        </div>
+
+        <div class="result-row">
+          <span class="label">Equidade próxima carta</span>
+          <span class="value mono" id="r-next">—</span>
+        </div>
+
+        <div class="result-row">
+          <span class="label">Pot odds</span>
+          <span class="value mono" id="r-potodds">—</span>
+        </div>
+
+        <div class="result-row">
+          <span class="label">Equidade necessária</span>
+          <span class="value mono" id="r-required">—</span>
+        </div>
+
+        <div class="action-box" id="r-action-box">
+          <div class="label">Ação sugerida</div>
+          <div id="r-action" class="action">—</div>
+          <div id="r-ev" class="ev"></div>
+        </div>
+
+        <div class="save-area">
+          <button id="save-toggle" type="button" class="btn-secondary">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
+                 stroke="currentColor" stroke-width="2.4"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Salvar mão
+          </button>
+
+          <div class="save-form" id="save-form" hidden>
+            <div class="save-row">
+              <span class="label">Ação tomada</span>
+              <div class="action-chips" id="save-action-chips">
+                <button type="button" data-action="fold"  class="action-chip fold">Desisti</button>
+                <button type="button" data-action="call"  class="action-chip call">Paguei</button>
+                <button type="button" data-action="raise" class="action-chip raise">Aumentei</button>
+                <button type="button" data-action="check" class="action-chip check">Mesa</button>
+                <button type="button" data-action="bet"   class="action-chip bet">Apostei</button>
+              </div>
+            </div>
+            <div class="save-row">
+              <label for="save-notes" class="label">Notas (opcional)</label>
+              <textarea id="save-notes" rows="2" maxlength="500"
+                        placeholder="Ex.: blefe na river, oponente passivo, pot odds boas mas read negativo…"></textarea>
+            </div>
+            <div class="save-buttons">
+              <button id="save-cancel" type="button" class="link-btn">Cancelar</button>
+              <button id="save-confirm" type="button" class="btn-primary save-confirm">
+                <span class="spinner" aria-hidden="true"></span>
+                <span class="label-default">Confirmar e salvar</span>
+                <span class="label-loading">Salvando…</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="save-toast" id="save-toast" hidden></div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <section class="history-section" id="history-section">
+    <div class="history-inner">
+      <div class="history-header">
+        <h2 class="history-title">Histórico de mãos</h2>
+        <div class="history-meta">
+          <span id="history-count" class="muted">0 mãos salvas</span>
+          <button id="history-refresh" type="button" class="link-btn">Atualizar</button>
+        </div>
+      </div>
+      <div id="history-list" class="history-list"></div>
+      <p id="history-empty" class="history-empty" hidden>
+        Nenhuma mão salva ainda. Analise uma mão e clique em <strong>Salvar mão</strong>.
+      </p>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="brand">
+        <div class="avatar" aria-hidden="true">
+          <img src="/static/img/samuca.png" alt="" onerror="this.style.display='none'">
+        </div>
+        <div class="brand-text">
+          <strong>Reporter Tourette</strong>
+          <span>Análise pra estudo de poker</span>
+        </div>
+      </div>
+
+      <ul class="socials">
+        <li>
+          <a href="https://www.youtube.com/@reporter.tourette"
+             target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M23.5 6.2c-.27-1.02-1.07-1.83-2.09-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.41.5C1.57 4.37.77 5.18.5 6.2 0 8.04 0 12 0 12s0 3.96.5 5.8c.27 1.02 1.07 1.83 2.09 2.1C4.4 20.4 12 20.4 12 20.4s7.6 0 9.41-.5c1.02-.27 1.82-1.08 2.09-2.1.5-1.84.5-5.8.5-5.8s0-3.96-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://www.instagram.com/reportertourette/"
+             target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+            </svg>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <p class="credit">
+      Desenvolvido por
+      <a href="https://www.instagram.com/bigdev.z/" target="_blank" rel="noopener noreferrer">BigDev.Z - IT Consulting</a>
+    </p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
