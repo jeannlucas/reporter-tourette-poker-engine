@@ -47,10 +47,10 @@ entrada. Sem banco, sem rede, sem interface gráfica: entrada manual e cálculo.
 2. **Sem lint configurado.**
 
 ## Vocabulário de domínio
-- **Equidade** — probabilidade de a mão vencer, aqui estimada por Monte Carlo.
-- **Outs** — cartas que ainda podem completar a mão desejada.
-- **Pot odds** — relação entre o que se paga e o que se pode ganhar.
-- **Texas Hold'em** — variante de pôquer com 2 cartas na mão e 5 comunitárias.
+- **Equidade**: probabilidade de a mão vencer, aqui estimada por Monte Carlo.
+- **Outs**: cartas que ainda podem completar a mão desejada.
+- **Pot odds**: relação entre o que se paga e o que se pode ganhar.
+- **Texas Hold'em**: variante de pôquer com 2 cartas na mão e 5 comunitárias.
 
 ## Armadilhas conhecidas
 1. **É repositório PÚBLICO e tem licença open source.** Qualquer coisa
